@@ -47,14 +47,70 @@ You can either uninstall Apache from the existing Load Balancer server, or creat
 
 ```
         sudo apt update
-        sudo apt install nginx
+        sudo apt install nginx -y
         sudo systemctl enable nginx && sudo systemctl start nginx
+        sudo systemctl status nginx
 ```
 The last command will enable our nginx at start-boot so that if we restart thr server the nginx will come up.
 ### Configure Nginx LB using Web Servers’ names defined in /etc/hosts
+1. Method 1
+
+Open Nginx configuration file with the command below:
+```
+sudo vi /etc/nginx/sites-available/load_balancer.conf
+```
+
+Paste the configuration file below to configure nginx to act like a load balancer. Make sure you edit the file and provide necessary information like your server IP address etc.
+```        
+upstream backend_servers {
+
+    # your are to replace the public IP and Port to that of your webservers
+    server web1; # public IP and port for webserser 1
+    server web2; # public IP and port for webserver 2
+}
+
+server {
+    listen 80;
+    server_name <your load balancer's public IP addres>; # provide your load balancers public IP address
+
+    location / {
+        proxy_pass http://backend_servers;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+Check and restart nginx
+```
+sudo nginx -t && sudo systemctl restart nginx
+```
+
+Remove the default site
+```
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+```
+
+CD into sites-enabled dir and link it to the sites-available configuration
+```
+cd /etc/nginx/sites-enabled
+sudo ln -s ../sites-available/load_balancer.conf .
+ls -ll
+```
+
+Finally, confirm that your configuration is correct and restart the Nginx server:
+
+```
+sudo nginx -t
+sudo systemctl restart nginx
+sudo systemctl status nginx
+```
+
+2. Method 2
 
 Open the default nginx configuration file
-
 ```
 sudo vi /etc/nginx/nginx.conf
 ```
@@ -115,14 +171,31 @@ Update your **nginx.conf** with **server_name www.<your-domain-name.com>** inste
 
 5. Install **certbot** and request for an SSL/TLS certificate
 
-Make sure **snapd** service is active and running
+- Method 1: To install with apt
 
+```
+sudo apt install certbot -y
+sudo apt install python3-certbot-nginx -y
+```
+
+Reload nginx
+```
+sudo nginx -t && sudo nginx -s reload
+```
+Creat a certificate for our domain
+```
+sudo certbot --nginx -d onyeka.ga -d www.onyeka.ga
+```
+Follow the steps 
+
+- Method 2: To install with snap
+
+Make sure **snapd** service is active and running
 ```
 sudo systemctl status snapd
 ```
 
 Install certbot
-
 ```
 sudo snap install --classic certbot
 ```
