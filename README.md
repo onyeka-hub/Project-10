@@ -87,11 +87,21 @@ Check and restart nginx
 sudo nginx -t && sudo systemctl restart nginx
 ```
 
-Remove the default site
+Remove or unlink the default site
 ```
 sudo rm -f /etc/nginx/sites-enabled/default
+OR
+sudo unlink /etc/nginx/sites-enabled/default
+
 sudo nginx -t
 ```
+
+Link the /sites-available/load_balancer.conf to /sites-enabled
+```
+sudo ln -s /etc/nginx/sites-available/load_balancer.conf /etc/nginx/sites-enabled/
+```
+
+OR
 
 CD into sites-enabled dir and link it to the sites-available configuration
 ```
@@ -104,7 +114,7 @@ Finally, confirm that your configuration is correct and restart the Nginx server
 
 ```
 sudo nginx -t
-sudo systemctl restart nginx
+sudo systemctl reload nginx
 sudo systemctl status nginx
 ```
 
